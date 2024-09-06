@@ -3,6 +3,7 @@ Program to produce CSV file of MQ Statistics
 Statistics must be turned on in the Queue Manager for them to be sent to SYSTEM.ADMIN.STSTISTICS Queue
 Statistics can be turn on at the Queue Manager but it is advisable to turn them on at the Queue Level
     This will reduce the output and get specific on the queues tracked.
+A good setup would be to trigger the scripts on the SYSTEM.ADMIN.STATISTICS.QUEUE to run as FIRST when messages show up.
 The properties file that runs this script is typically in /var/mqm/scripts and looks like this:
 
 [qmgrName]
@@ -24,19 +25,22 @@ This program relies on the output of the mqtools program get_pcf.py. This can be
 
 pip3 -v install git+http://github.com/colinpaicemq/MQTools/
 
+It uses the output from get_pcf.py like the pretty_json.py sample
+
 The program runs with something like the following command:
 
 python3.12 get_pcf.py -qm BOBBEE2 -channel SYSTEM.ADMIN.SVRCONN -conname '9.30.43.121(1414)' -userid mqm -password mqm -queue SYSTEM.ADMIN.STATISTICS.QUEUE | python3.12 MQStat_PYMQI.py
 
 Requirements:
-This program requires PYTHON 3.12.5 because of the CASE statement. this can be worked around for a lower level it IF statements
+This program requires PYTHON 3.12.5 because of the CASE statement. This can be worked around for a lower level using IF statements
 The program may require in PIP installation of modules. They are notated with a comment in the IMPORTS.
 
 Input parameters:
 none, does require the properties file
 
 Output:
-CSV Report of Queue Stats
+CSV Report of Queue Stats - There is a sample EXCEL sheet in the repository with a chart on the second tab. Inputting new data to the 
+   first sheet updates the chart.
 
 Functions:
   connect_queue_manager(queueManager)
@@ -53,11 +57,7 @@ Functions:
 
 #_ctypes  yum install libffi-devel
 #         yum install python3.12-devel
-try:
-    import _ctypes
-    print("The _ctypes module is available.")
-except ModuleNotFoundError:
-    print("The _ctypes module is not available.")
+
 import calendar
 import dateutil.parser    #pip3.12 install python-dateutil
 from datetime import date
@@ -357,16 +357,19 @@ def create_output_file(headings, values):
 ### Set up report file name and figure out if we create or reuse
 ###
   match occurance:
+  
     case "monthly":
       occurance_value = calendar.month_name[date.today().month]
       name = "/home/mqm/scripts/" + hostHLQ + ".QUEUE_STATS_" + occurance_value
       filename = "%s.csv" % name
+      
       if file_exists(filename):
         report = open(filename, "at")
       else:
         report = open(filename, "wt")
         outputL=headings + "\n"
         report.write(outputL)	
+        
     case "daily":
       occurance_value= datetime.today().strftime('%Y-%m-%d')
       name = "/home/mqm/scripts/" + hostHLQ + ".QUEUE_STATS_" + occurance_value
@@ -376,38 +379,39 @@ def create_output_file(headings, values):
       else:
         report = open(filename, "wt")
         outputL=headings + "\n"
-        report.write(outputL)		
+        report.write(outputL)	
+        
     case "weekly":
-      name = "/home/mqm/scripts/" + hostHLQ + ".QUEUE_STATS_" + occurance_value
-      filename = "%s.csv" % name
-      today = datetime.datetime.today()
-      if ocurance == "weekly": # file is older than 7 days
-        name = "/home/mqm/scripts/" + hostHLQ + ".QUEUE_STATS_" + occurance_value
-#        path = r%name%
-        create_time = os.path.getctime(name)
-        print(create_time)
-        create_date = datetime.datetime.fromtimestamp(create_time)
-        print('Created on:', create_date)
-        d2 = datetime.strptime(d2, "%Y-%m-%d")
-        numdays = abs((d2 - create_date).days)
-        if file_exists(filename) and (today == 6) and (numdays > 1):
-          os.rename(name, name + d2) #rename old file with date
+      name = "/home/mqm/scripts/" + hostHLQ + ".QUEUE_STATS_" + occurance
+      filename = "%s.csv" % name # this is the name of the file
+      todaydt = datetime.now() # lets get the day of the week to see if it is Sunday
+      today = todaydt.isoweekday()
+      d2 = datetime.today().strftime('%Y-%m-%d')
+      
+      if not file_exists(filename): # file does not exist at all
+        report = open(filename, "wt")
+        outputL=headings + "\n"
+        report.write(outputL)
+        
+      else: # file does exist
+#        filecreation = os.path.getctime(filename)
+#        create_date = date.fromtimestamp(filecreation).strftime('%m-%d-%y')
+#        create_time = os.path.getctime(filename)
+#        print(create_time)
+#        create_date = datetime.strptime(create_time, "%Y-%m-%d")
+#        print('Created on:', create_date)
+#        numdays = abs((d2 - create_date).days)
+        file_time = os.path.getmtime(filename)
+        if (today == 6) and (((time.time() - file_time) / 3600 > 24*days) > 1): # it's Sunday, file is there and it is older than today
+          ## print("-----Rename weekly file and create new.")
+          os.rename(filename, filename + d2) #rename old file with date # rename old file, add todays date to the name
           report = open(filename, "wt")
           outputL=headings + "\n"
           report.write(outputL)
-        elif not file_exists(filename):
-          report = open(filename, "wt")
-          outputL=headings + "\n"
-          report.write(outputL)
-        else:
+          
+        else: # we will reuse the existing file
+          ## print("-----Reuse weekly file")
           report = open(filename, "at")
-      elif ocurance == "monthly": # does it exist with the month in name
-        if file_exists(filename):
-          report = open(filename, "at")
-        else:
-          report = open(filename, "wt")
-          outputL=headings + "\n"
-          report.write(outputL)
   outputL=values + "\n"
   report.write(outputL)
   return report
@@ -459,7 +463,7 @@ while True:
  
 #print("----Type mqpcf_stats",type(mqpcf_stats))
   new_test_dict = json.loads(mqpcf_stats)
-  print("----Type new_test_dict",type(mqpcf_stats))
+  ##print("----Type new_test_dict",type(mqpcf_stats))
     
 ###
 ### open the serailzed dictionary file from get_pcf.py
@@ -467,7 +471,7 @@ while True:
     
   countn += 1    
 #print("----Type new_test_dict",type(new_test_dict))
-  print("called "+str(countn), file=sys.stderr, flush=True)
+  ##print("called "+str(countn), file=sys.stderr, flush=True)
 #print("-----The new dictionary is : " + str(new_test_dict))
 
   keys_list = list(new_test_dict.keys())
@@ -562,22 +566,22 @@ while True:
   ##print("-----values_csv back from RESET_STATS = ", values_csv)
   ##print(dir(datetime))
     dt = datetime.now()
-    print("-----values_csv before strip = ", values_csv)
+    ##print("-----values_csv before strip = ", values_csv)
     keys_csv = keys_csv.rstrip(",")
     values_csv = values_csv.rstrip(",")
-    print("-----values_csv after strip = ", values_csv)
+    ##print("-----values_csv after strip = ", values_csv)
     keys_csv = keys_csv + "," + "Date-Time"
     values_csv = values_csv + "," + str(dt)
 ##
 ## We only want to call create_output_file once to open the file and get 
 ## the first line and/or headings out there
 ##
-    print("------calling create_output_file")
+    ##print("------calling create_output_file")
     if reportcalled:
       outputL=values_csv + "\n"
       qstatsreport.write(outputL)
     else:
-      print("------calling create_output_file")
+      ##print("------calling create_output_file")
       qstatsreport = create_output_file(keys_csv, values_csv)
       reportcalled = True
   
