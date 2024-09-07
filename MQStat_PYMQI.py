@@ -59,9 +59,10 @@ Functions:
 #         yum install python3.12-devel
 
 import calendar
+import time
 import dateutil.parser    #pip3.12 install python-dateutil
 from datetime import date
-from datetime import datetime
+from datetime import datetime, timedelta
 import calendar
 import configparser
 import subprocess
@@ -352,7 +353,7 @@ def create_output_file(headings, values):
   hostHLQ=list0[0].strip()	
   reportcycle = get_config_dict('reportcycle')
   occurance=reportcycle.get("occurance")
-  print("Report Cycle = ", occurance)
+#  print("Report Cycle = ", occurance)
 ###
 ### Set up report file name and figure out if we create or reuse
 ###
@@ -394,23 +395,14 @@ def create_output_file(headings, values):
         report.write(outputL)
         
       else: # file does exist
-#        filecreation = os.path.getctime(filename)
-#        create_date = date.fromtimestamp(filecreation).strftime('%m-%d-%y')
-#        create_time = os.path.getctime(filename)
-#        print(create_time)
-#        create_date = datetime.strptime(create_time, "%Y-%m-%d")
-#        print('Created on:', create_date)
-#        numdays = abs((d2 - create_date).days)
-        file_time = os.path.getmtime(filename)
-        if (today == 6) and (((time.time() - file_time) / 3600 > 24*days) > 1): # it's Sunday, file is there and it is older than today
-          ## print("-----Rename weekly file and create new.")
-          os.rename(filename, filename + d2) #rename old file with date # rename old file, add todays date to the name
+        one_day_ago = datetime.now() - timedelta(days=1)
+        create_date = datetime.fromtimestamp(os.path.getctime(filename))
+        if (today == 0) and (create_date > one_day_ago): # it's Sunday, file is there and it is older than today
+          os.rename(filename, filename + "." + d2) #rename old file with date # rename old file, add todays date to the name
           report = open(filename, "wt")
           outputL=headings + "\n"
-          report.write(outputL)
-          
+          report.write(outputL)  
         else: # we will reuse the existing file
-          ## print("-----Reuse weekly file")
           report = open(filename, "at")
   outputL=values + "\n"
   report.write(outputL)
