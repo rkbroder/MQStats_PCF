@@ -397,8 +397,8 @@ def create_output_file(headings, values):
       else: # file does exist
         one_day_ago = datetime.now() - timedelta(days=1)
         create_date = datetime.fromtimestamp(os.path.getctime(filename))
-        if (today == 0) and (create_date > one_day_ago): # it's Sunday, file is there and it is older than today
-          os.rename(filename, filename + "." + d2) #rename old file with date # rename old file, add todays date to the name
+        if (today == 7) and (create_date > one_day_ago): # it's Sunday, file is there and it is older than today
+          os.rename(filename, "%s-%s.csv" % (name, d2)) #rename old file with date # rename old file, add todays date to the name
           report = open(filename, "wt")
           outputL=headings + "\n"
           report.write(outputL)  
