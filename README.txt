@@ -41,6 +41,17 @@ Input parameters:
 1 - None. It does take a std input feed piped to the program from get_pcf.py
 2 - Does require the properties file
 
+Install:
+1 - Install MQ
+2 - Install Python 3.12.5
+3 - Install PYMQI
+4 - PIP install mqtools (pip3 -v install git+http://github.com/colinpaicemq/MQTools/)
+5 - PIP install IMPORTS (may need more than listed)
+    1 - pip3.12 install python-dateutil
+    2 - pip3.12 install pymqi
+    3 - pip3.12 install nested-lookup
+6 - Install MQStats_pcf to /....../mqtools/examples
+
 Output:
 CSV Report of Queue Stats - There is a sample EXCEL sheet in the repository with a chart on the second tab. Inputting new data to the 
    first sheet updates the chart. The chart has Message numbers on the Y axis and Time on the X axis
