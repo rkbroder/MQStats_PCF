@@ -26,7 +26,8 @@ This program relies on the output of the mqtools program get_pcf.py. This can be
 
 pip3 -v install git+http://github.com/colinpaicemq/MQTools/
 
-It uses the output from get_pcf.py like the pretty_json.py sample supplied in that repository.
+It uses the output from get_pcf.py like the pretty_json.py sample supplied in that repository. The MQStats_PCF program should be loaded into the
+/examples directory under the mqtools installation
 
 The program runs with something like the following command:
 
