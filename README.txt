@@ -33,7 +33,7 @@ It uses the output from get_pcf.py like the pretty_json.py sample supplied in th
 
 The program runs with something like the following command:
 
-python3.12 get_pcf.py -qm BOBBEE2 -channel SYSTEM.ADMIN.SVRCONN -conname '9.30.43.121(1414)' -userid mqm -password mqm -queue SYSTEM.ADMIN.STATISTICS.QUEUE | python3.12 MQStat_PYMQI.py
+python3.12 /usr/local/lib/python3.12/site-packages/mqtools/examples/get_pcf.py -qm BOBBEE2 -channel SYSTEM.ADMIN.SVRCONN -conname '9.30.43.121(1414)' -userid mqm -password mqm -queue SYSTEM.ADMIN.STATISTICS.QUEUE | python3.12 /usr/local/lib/python3.12/site-packages/mqtools/examples/MQStat_PYMQI.py
 
 Requirements:
 This program requires PYTHON 3.12.5 because of the CASE statement. This can be worked around for a lower level using IF statements
@@ -46,7 +46,7 @@ Input parameters:
 Install:
 1 - Install MQ
 2 - Install Python 3.12.5
-3 - Install PYMQI
+3 - Install PYMQI (the project's issue tracker is here https://github.com/dsuch/pymqi)
 4 - PIP install mqtools (pip3 -v install git+http://github.com/colinpaicemq/MQTools/)
 5 - PIP install IMPORTS (may need more than listed)
     1 - pip3.12 install python-dateutil
